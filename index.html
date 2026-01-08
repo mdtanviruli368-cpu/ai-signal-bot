@@ -7,126 +7,151 @@
   <!-- Telegram WebApp SDK -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
-  <!-- Monetag Core -->
+  <!-- Monetag SDK (Rewarded Interstitial) -->
   <script src="https://cdn.monetag.com/tag.min.js"></script>
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       margin: 0;
       height: 100vh;
-      background: #0f172a;
-      color: #fff;
-      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #020617, #0f172a);
+      color: #ffffff;
+      font-family: Arial, Helvetica, sans-serif;
       display: flex;
-      justify-content: center;
       align-items: center;
+      justify-content: center;
     }
 
-    .box {
+    .container {
       width: 90%;
       max-width: 420px;
-      background: #020617;
-      padding: 25px;
-      border-radius: 14px;
       text-align: center;
+      padding: 25px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.05);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
     }
 
-    button {
+    h1 {
+      font-size: 22px;
+      margin-bottom: 10px;
+    }
+
+    p {
+      font-size: 14px;
+      opacity: 0.9;
+      margin-bottom: 25px;
+    }
+
+    .btn {
       width: 100%;
       padding: 14px;
-      margin-top: 15px;
       font-size: 16px;
       font-weight: bold;
-      border-radius: 10px;
       border: none;
-      cursor: pointer;
-    }
-
-    #startBtn {
+      border-radius: 12px;
       background: #22c55e;
       color: #000;
+      cursor: pointer;
+      margin-bottom: 15px;
+    }
+
+    .btn:active {
+      transform: scale(0.97);
     }
 
     #aiBtn {
-      background: #38bdf8;
       display: none;
     }
 
     #loading {
       display: none;
-      margin-top: 15px;
+      font-size: 15px;
       opacity: 0.8;
+      margin-bottom: 20px;
     }
   </style>
 </head>
 
 <body>
 
-<div class="box">
-  <h2>🤖 AI Signal Bot</h2>
-  <p>Start চাপুন → Ad দেখুন → AI Signal পান</p>
+  <div class="container">
+    <h1>🤖 AI Signal Bot</h1>
+    <p>Start চাপলে একটি ad দেখানো হবে</p>
 
-  <button id="startBtn">▶️ Start</button>
-  <div id="loading">⏳ Ad loading…</div>
-  <button id="aiBtn">🧠 Open AI Signal Bot</button>
-</div>
+    <button id="startBtn" class="btn">▶️ Start</button>
+    <div id="loading">⏳ Ad loading…</div>
+    <button id="aiBtn" class="btn">🧠 Open AI Signal Bot</button>
+  </div>
 
-<script>
-  const tg = window.Telegram.WebApp;
-  tg.expand();
+  <script>
+    // Telegram Init
+    const tg = window.Telegram.WebApp;
+    tg.expand();
 
-  const startBtn = document.getElementById("startBtn");
-  const aiBtn = document.getElementById("aiBtn");
-  const loading = document.getElementById("loading");
+    const startBtn = document.getElementById("startBtn");
+    const aiBtn = document.getElementById("aiBtn");
+    const loading = document.getElementById("loading");
 
-  /* ===============================
-     MONETAG INITIALIZATION
-     =============================== */
-
-  window.monetag = window.monetag || {};
-  monetag.cmd = monetag.cmd || [];
-
-  monetag.cmd.push(function () {
-    monetag.rewarded({
-      zoneId: 10432878   // 🔴 এখানে তোমার Monetag Rewarded Zone ID
-    });
-  });
-
-  /* ===============================
-     START BUTTON CLICK
-     =============================== */
-
-  startBtn.onclick = function () {
-    startBtn.style.display = "none";
-    loading.style.display = "block";
-
-    if (typeof window.show_10432878 === "function") {
-      show_10432878()
-        .then(() => {
-          loading.style.display = "none";
-          aiBtn.style.display = "block";
-        })
-        .catch(() => {
-          loading.style.display = "none";
-          aiBtn.style.display = "block";
-        });
-    } else {
+    // Reset every time page loads
+    function resetUI() {
+      startBtn.style.display = "block";
+      aiBtn.style.display = "none";
       loading.style.display = "none";
-      aiBtn.style.display = "block";
-      alert("Monetag not ready");
     }
-  };
 
-  /* ===============================
-     AI BUTTON
-     =============================== */
+    resetUI();
 
-  aiBtn.onclick = function () {
-    tg.openLink("https://color-title-33404201.figma.site/");
-  };
-</script>
+    // Wait for Monetag ready
+    function waitForMonetag(callback) {
+      let count = 0;
+
+      const interval = setInterval(() => {
+        count++;
+
+        if (typeof window.show_10432878 === "function") {
+          clearInterval(interval);
+          callback();
+        }
+
+        if (count > 20) {
+          clearInterval(interval);
+          alert("Monetag not ready. Open this page from Telegram App.");
+          loading.style.display = "none";
+          aiBtn.style.display = "block";
+        }
+      }, 500);
+    }
+
+    // Start button click
+    startBtn.addEventListener("click", () => {
+      startBtn.style.display = "none";
+      loading.style.display = "block";
+
+      waitForMonetag(() => {
+        show_10432878()
+          .then(() => {
+            loading.style.display = "none";
+            aiBtn.style.display = "block";
+          })
+          .catch(() => {
+            loading.style.display = "none";
+            aiBtn.style.display = "block";
+          });
+      });
+    });
+
+    // Open AI Bot inside Telegram WebView
+    aiBtn.addEventListener("click", () => {
+      tg.openLink("https://color-title-33404201.figma.site/");
+    });
+  </script>
 
 </body>
 </html>
