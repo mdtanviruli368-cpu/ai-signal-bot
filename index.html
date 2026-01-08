@@ -7,151 +7,140 @@
   <!-- Telegram WebApp SDK -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
-  <!-- Monetag SDK (Rewarded Interstitial) -->
-  <script src="https://cdn.monetag.com/tag.min.js"></script>
+  <!-- ✅ Monetag Rewarded SDK (OFFICIAL) -->
+  <script src='//libtl.com/sdk.js'
+          data-zone='10432878'
+          data-sdk='show_10432878'></script>
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <style>
-    * {
-      box-sizing: border-box;
-    }
-
     body {
       margin: 0;
       height: 100vh;
       background: linear-gradient(135deg, #020617, #0f172a);
-      color: #ffffff;
-      font-family: Arial, Helvetica, sans-serif;
+      color: #fff;
+      font-family: Arial, sans-serif;
       display: flex;
       align-items: center;
       justify-content: center;
     }
 
-    .container {
+    .box {
       width: 90%;
       max-width: 420px;
-      text-align: center;
+      background: rgba(255,255,255,0.06);
       padding: 25px;
       border-radius: 16px;
-      background: rgba(255, 255, 255, 0.05);
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      text-align: center;
     }
 
     h1 {
+      margin-bottom: 8px;
       font-size: 22px;
-      margin-bottom: 10px;
     }
 
     p {
       font-size: 14px;
       opacity: 0.9;
-      margin-bottom: 25px;
+      margin-bottom: 20px;
     }
 
-    .btn {
+    button {
       width: 100%;
       padding: 14px;
-      font-size: 16px;
-      font-weight: bold;
       border: none;
       border-radius: 12px;
+      font-size: 16px;
+      font-weight: bold;
       background: #22c55e;
       color: #000;
       cursor: pointer;
-      margin-bottom: 15px;
-    }
-
-    .btn:active {
-      transform: scale(0.97);
-    }
-
-    #aiBtn {
-      display: none;
     }
 
     #loading {
       display: none;
-      font-size: 15px;
+      margin-bottom: 15px;
       opacity: 0.8;
-      margin-bottom: 20px;
+    }
+
+    #aiBtn {
+      display: none;
+      margin-top: 10px;
     }
   </style>
 </head>
 
 <body>
 
-  <div class="container">
-    <h1>🤖 AI Signal Bot</h1>
-    <p>Start চাপলে একটি ad দেখানো হবে</p>
+<div class="box">
+  <h1>🤖 AI Signal Bot</h1>
+  <p>Start চাপলে ১৫ সেকেন্ডের ad দেখানো হবে</p>
 
-    <button id="startBtn" class="btn">▶️ Start</button>
-    <div id="loading">⏳ Ad loading…</div>
-    <button id="aiBtn" class="btn">🧠 Open AI Signal Bot</button>
-  </div>
+  <button id="startBtn">▶️ Start</button>
+  <div id="loading">⏳ Ad loading…</div>
+  <button id="aiBtn">🧠 Open AI Signal Bot</button>
+</div>
 
-  <script>
-    // Telegram Init
-    const tg = window.Telegram.WebApp;
-    tg.expand();
+<script>
+  const tg = window.Telegram.WebApp;
+  tg.expand();
 
-    const startBtn = document.getElementById("startBtn");
-    const aiBtn = document.getElementById("aiBtn");
-    const loading = document.getElementById("loading");
+  const startBtn = document.getElementById("startBtn");
+  const loading = document.getElementById("loading");
+  const aiBtn = document.getElementById("aiBtn");
 
-    // Reset every time page loads
-    function resetUI() {
-      startBtn.style.display = "block";
-      aiBtn.style.display = "none";
-      loading.style.display = "none";
-    }
+  function resetUI() {
+    startBtn.style.display = "block";
+    loading.style.display = "none";
+    aiBtn.style.display = "none";
+  }
 
-    resetUI();
+  resetUI();
 
-    // Wait for Monetag ready
-    function waitForMonetag(callback) {
-      let count = 0;
+  // ✅ Wait until Monetag is READY
+  function waitForMonetag(cb) {
+    let tries = 0;
+    const timer = setInterval(() => {
+      tries++;
+      if (typeof window.show_10432878 === "function") {
+        clearInterval(timer);
+        cb();
+      }
+      if (tries > 20) {
+        clearInterval(timer);
+        alert("Monetag not ready. Please open from Telegram mobile app.");
+        loading.style.display = "none";
+        aiBtn.style.display = "block";
+      }
+    }, 500);
+  }
 
-      const interval = setInterval(() => {
-        count++;
+  // Start click → show ad
+  startBtn.onclick = () => {
+    startBtn.style.display = "none";
+    loading.style.display = "block";
 
-        if (typeof window.show_10432878 === "function") {
-          clearInterval(interval);
-          callback();
-        }
-
-        if (count > 20) {
-          clearInterval(interval);
-          alert("Monetag not ready. Open this page from Telegram App.");
+    waitForMonetag(() => {
+      show_10432878()
+        .then(() => {
+          // ✅ Ad completed
           loading.style.display = "none";
           aiBtn.style.display = "block";
-        }
-      }, 500);
-    }
-
-    // Start button click
-    startBtn.addEventListener("click", () => {
-      startBtn.style.display = "none";
-      loading.style.display = "block";
-
-      waitForMonetag(() => {
-        show_10432878()
-          .then(() => {
-            loading.style.display = "none";
-            aiBtn.style.display = "block";
-          })
-          .catch(() => {
-            loading.style.display = "none";
-            aiBtn.style.display = "block";
-          });
-      });
+        })
+        .catch(() => {
+          // ❌ skipped / failed
+          loading.style.display = "none";
+          aiBtn.style.display = "block";
+        });
     });
+  };
 
-    // Open AI Bot inside Telegram WebView
-    aiBtn.addEventListener("click", () => {
-      tg.openLink("https://color-title-33404201.figma.site/");
-    });
-  </script>
+  // Open AI bot inside Telegram (NOT external browser)
+  aiBtn.onclick = () => {
+    tg.openLink("https://color-title-33404201.figma.site/");
+  };
+</script>
 
 </body>
 </html>
